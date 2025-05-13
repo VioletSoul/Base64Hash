@@ -2,198 +2,257 @@ import base64
 import hashlib
 import codecs
 import tkinter as tk
+from tkinter import ttk, messagebox
 from tkinter import scrolledtext
+import threading
 
-# Define color scheme for different text parts in the output area
+# Цветовая схема для различных частей интерфейса
 COLORS = {
-    'header': '#DAA520',   # Golden color for headers and separators
-    'label': '#1E90FF',    # Dodger blue for labels (algorithm names)
-    'result': '#949494',   # Light gray for the encoded/hash results
-    'input_label': '#228B22',  # Forest green for input label
+    'header': '#DAA520',       # Золотистый цвет для заголовков
+    'label': '#1E90FF',        # Синий для названий алгоритмов
+    'result': '#949494',       # Светло-серый для результатов кодирования
+    'input_label': '#228B22',  # Зеленый для метки ввода
+    'warning': '#FF4500'       # Оранжево-красный для предупреждений
 }
 
-# Function to encode string to Base64
-def encode_base64(s):
-    return base64.b64encode(s.encode('utf-8')).decode()
+# region Создание русского алфавита с буквой Ё
+def make_russian_alphabet():
+    """
+    Создает списки русских заглавных и строчных букв, включая букву Ё/ё,
+    так как она не входит в непрерывный диапазон Unicode.
+    """
+    rus_upper = [chr(c) for c in range(ord('А'), ord('Е')+1)]  # А-Е
+    rus_upper += ['Ё']  # Добавляем Ё
+    rus_upper += [chr(c) for c in range(ord('Ж'), ord('Я')+1)]  # Ж-Я
+    rus_lower = [c.lower() for c in rus_upper]  # Строчные буквы
+    return rus_upper, rus_lower
 
-# Function to encode string to URL-safe Base64
-def encode_base64_urlsafe(s):
-    return base64.urlsafe_b64encode(s.encode('utf-8')).decode()
+# Глобальные переменные с алфавитами для шифров
+RUS_UPPER, RUS_LOWER = make_russian_alphabet()
+ENG_UPPER = [chr(c) for c in range(ord('A'), ord('Z')+1)]
+ENG_LOWER = [chr(c) for c in range(ord('a'), ord('z')+1)]
+# endregion
 
-# Function to encode string to Base32
-def encode_base32(s):
-    return base64.b32encode(s.encode('utf-8')).decode()
-
-# Function to encode string to hexadecimal representation
-def encode_hex(s):
-    return s.encode('utf-8').hex()
-
-# Function to encode string using ROT13 cipher
-def encode_rot13(s):
-    return codecs.encode(s, 'rot_13')
-
-# Function to calculate MD5 hash of the string
-def encode_md5(s):
-    return hashlib.md5(s.encode('utf-8')).hexdigest()
-
-# Function to calculate SHA1 hash of the string
-def encode_sha1(s):
-    return hashlib.sha1(s.encode('utf-8')).hexdigest()
-
-# Function to calculate SHA256 hash of the string
-def encode_sha256(s):
-    return hashlib.sha256(s.encode('utf-8')).hexdigest()
-
-# Function to apply Caesar cipher with a fixed shift (default +3)
+# region Функция Цезаря с поддержкой русского и английского алфавитов
 def caesar_cipher(text, shift=3):
+    """
+    Применяет шифр Цезаря с заданным сдвигом ко всем буквам текста.
+    Поддерживает английский и русский алфавиты, включая букву Ё.
+    Небуквенные символы остаются без изменений.
+    """
     result = []
-    # English uppercase letters
-    eng_upper = [chr(c) for c in range(ord('A'), ord('Z')+1)]
-    # English lowercase letters
-    eng_lower = [chr(c) for c in range(ord('a'), ord('z')+1)]
-    # Russian uppercase letters (Cyrillic)
-    rus_upper = [chr(c) for c in range(ord('А'), ord('Я')+1)]
-    # Russian lowercase letters (Cyrillic)
-    rus_lower = [chr(c) for c in range(ord('а'), ord('я')+1)]
-
     for char in text:
-        if char in eng_upper:
-            idx = eng_upper.index(char)
-            result.append(eng_upper[(idx + shift) % 26])
-        elif char in eng_lower:
-            idx = eng_lower.index(char)
-            result.append(eng_lower[(idx + shift) % 26])
-        elif char in rus_upper:
-            idx = rus_upper.index(char)
-            result.append(rus_upper[(idx + shift) % 32])
-        elif char in rus_lower:
-            idx = rus_lower.index(char)
-            result.append(rus_lower[(idx + shift) % 32])
+        if char in ENG_UPPER:
+            idx = ENG_UPPER.index(char)
+            result.append(ENG_UPPER[(idx + shift) % 26])
+        elif char in ENG_LOWER:
+            idx = ENG_LOWER.index(char)
+            result.append(ENG_LOWER[(idx + shift) % 26])
+        elif char in RUS_UPPER:
+            idx = RUS_UPPER.index(char)
+            result.append(RUS_UPPER[(idx + shift) % 33])
+        elif char in RUS_LOWER:
+            idx = RUS_LOWER.index(char)
+            result.append(RUS_LOWER[(idx + shift) % 33])
         else:
-            # Non-alphabetic characters are unchanged
+            # Все остальные символы (пробелы, цифры, знаки) не меняются
             result.append(char)
     return ''.join(result)
+# endregion
 
-# Function to apply Atbash cipher (reverses alphabet)
+# region Функция Атбаш с поддержкой русского и английского алфавитов
 def atbash_cipher(text):
+    """
+    Реализует шифр Атбаш - замену буквы на "зеркальную" в алфавите.
+    Работает с английским и русским алфавитами (включая Ё).
+    Небуквенные символы остаются без изменений.
+    """
     result = []
-    eng_upper = [chr(c) for c in range(ord('A'), ord('Z')+1)]
-    eng_lower = [chr(c) for c in range(ord('a'), ord('z')+1)]
-    rus_upper = [chr(c) for c in range(ord('А'), ord('Я')+1)]
-    rus_lower = [chr(c) for c in range(ord('а'), ord('я')+1)]
-
     for char in text:
-        if char in eng_upper:
-            idx = eng_upper.index(char)
-            result.append(eng_upper[25 - idx])
-        elif char in eng_lower:
-            idx = eng_lower.index(char)
-            result.append(eng_lower[25 - idx])
-        elif char in rus_upper:
-            idx = rus_upper.index(char)
-            result.append(rus_upper[31 - idx])
-        elif char in rus_lower:
-            idx = rus_lower.index(char)
-            result.append(rus_lower[31 - idx])
+        if char in ENG_UPPER:
+            result.append(ENG_UPPER[25 - ENG_UPPER.index(char)])
+        elif char in ENG_LOWER:
+            result.append(ENG_LOWER[25 - ENG_LOWER.index(char)])
+        elif char in RUS_UPPER:
+            result.append(RUS_UPPER[32 - RUS_UPPER.index(char)])
+        elif char in RUS_LOWER:
+            result.append(RUS_LOWER[32 - RUS_LOWER.index(char)])
         else:
-            # Non-alphabetic characters unchanged
             result.append(char)
     return ''.join(result)
+# endregion
 
-# Function to apply XOR cipher with a fixed key (42)
-def xor_cipher(s, key=42):
-    # XOR each byte with key and return hex string
-    xored = bytes([b ^ key for b in s.encode('utf-8')])
-    return xored.hex()
+# region Современные алгоритмы хеширования
+def encode_sha3_256(s):
+    """
+    Возвращает хеш SHA3-256 от строки s в шестнадцатеричном виде.
+    """
+    return hashlib.sha3_256(s.encode('utf-8')).hexdigest()
 
-# Main application class inheriting from Tkinter's Tk
+def encode_blake2b(s):
+    """
+    Возвращает хеш BLAKE2b от строки s в шестнадцатеричном виде.
+    """
+    return hashlib.blake2b(s.encode('utf-8')).hexdigest()
+# endregion
+
 class CipherApp(tk.Tk):
+    """
+    Основной класс приложения - графический интерфейс для кодирования и хеширования текста.
+    Позволяет вводить текст и видеть результаты в реальном времени.
+    """
+
     def __init__(self):
         super().__init__()
-        # Set window title and size
-        self.title("Interactive Encoding and Hashing")
-        self.geometry("900x650")
+        self.title("Кодировщик")
+        self.geometry("1000x750")
 
-        # Label prompting user to enter text
-        self.label_input = tk.Label(
-            self,
-            text="Enter text:",
-            fg=COLORS['input_label'],
-            font=("Consolas", 14, "bold")
-        )
-        self.label_input.pack(anchor='w', padx=10, pady=(10, 0))
+        # Переменные для параметров шифров
+        self.xor_key = tk.StringVar(value='42')       # Ключ для XOR-шифра
+        self.caesar_shift = tk.StringVar(value='3')   # Сдвиг для шифра Цезаря
+        self.show_deprecated = tk.BooleanVar(value=False)  # Показывать ли устаревшие алгоритмы
 
-        # Single-line text entry widget for user input
-        self.entry_text = tk.Entry(self, font=("Consolas", 14))
-        self.entry_text.pack(fill='x', padx=10, pady=(0, 10))
-        self.entry_text.focus_set()  # Focus cursor here on start
+        self.create_widgets()  # Создаем виджеты интерфейса
+        self.setup_tags()      # Настраиваем стили для текста
 
-        # Scrollable text widget to display encoding results
-        self.output_area = scrolledtext.ScrolledText(
-            self,
-            font=("Consolas", 12),
-            state='disabled',  # Read-only
-            height=30
-        )
-        self.output_area.pack(fill='both', expand=True, padx=10, pady=10)
+    def create_widgets(self):
+        """
+        Создает и размещает все виджеты интерфейса: поля ввода параметров, текстовое поле ввода,
+        область вывода результатов.
+        """
+        # Панель с параметрами шифров
+        params_frame = ttk.Frame(self)
+        params_frame.pack(fill='x', padx=10, pady=5)
 
-        # Bind key release event to update output dynamically
+        # Метка и поле для ключа XOR
+        ttk.Label(params_frame, text="Ключ XOR:").grid(row=0, column=0, sticky='w')
+        ttk.Entry(params_frame, textvariable=self.xor_key, width=5).grid(row=0, column=1, sticky='w')
+
+        # Метка и поле для сдвига Цезаря
+        ttk.Label(params_frame, text="Сдвиг Цезаря:").grid(row=0, column=2, padx=10, sticky='w')
+        ttk.Entry(params_frame, textvariable=self.caesar_shift, width=5).grid(row=0, column=3, sticky='w')
+
+        # Чекбокс для отображения устаревших алгоритмов
+        ttk.Checkbutton(params_frame, text="Показывать устаревшие алгоритмы",
+                        variable=self.show_deprecated).grid(row=0, column=4, padx=10, sticky='w')
+
+        # Метка для поля ввода текста
+        ttk.Label(self, text="Введите текст:", style='Input.TLabel').pack(anchor='w', padx=10)
+
+        # Поле ввода текста
+        self.entry_text = ttk.Entry(self, font=('Consolas', 14))
+        self.entry_text.pack(fill='x', padx=10, pady=5)
+
+        # Область вывода с полосой прокрутки
+        self.output_area = scrolledtext.ScrolledText(self, state='disabled')
+        self.output_area.pack(expand=True, fill='both', padx=10, pady=10)
+
+        # Привязка события изменения текста к обработчику
         self.entry_text.bind('<KeyRelease>', self.on_text_change)
 
-        # Initialize output area with empty content
-        self.update_output("")
-
-    # Event handler called when user types or modifies input text
-    def on_text_change(self, event=None):
-        text = self.entry_text.get()
-        self.update_output(text)
-
-    # Updates the output area with encoded and hashed results
-    def update_output(self, text):
-        # Prepare lines to display: tuples with (text, tag) or (label, tag, result)
-        lines = [
-            ("----- ENCODING OUTPUT -----", 'header'),
-            (f"Base64:          ", 'label', encode_base64(text)),
-            (f"Base64 URL-safe: ", 'label', encode_base64_urlsafe(text)),
-            (f"Base32:          ", 'label', encode_base32(text)),
-            (f"Hex:             ", 'label', encode_hex(text)),
-            (f"ROT13:           ", 'label', encode_rot13(text)),
-            (f"Caesar (+3):     ", 'label', caesar_cipher(text)),
-            (f"Atbash:          ", 'label', atbash_cipher(text)),
-            (f"XOR (key=42):    ", 'label', xor_cipher(text)),
-            (f"MD5:             ", 'label', encode_md5(text)),
-            (f"SHA1:            ", 'label', encode_sha1(text)),
-            (f"SHA256:          ", 'label', encode_sha256(text)),
-            ("-----------------------------", 'header'),
-            ("Current input: ", 'input_label', text)
-        ]
-
-        # Enable editing to update text widget
-        self.output_area.config(state='normal')
-        self.output_area.delete('1.0', tk.END)  # Clear previous content
-
-        # Insert each line with appropriate tags for color and font
-        for line in lines:
-            if len(line) == 2:
-                # Header or separator line
-                self.output_area.insert(tk.END, line[0] + "\n", line[1])
-            else:
-                label, tag, result = line
-                self.output_area.insert(tk.END, label, tag)
-                self.output_area.insert(tk.END, result + "\n", 'result')
-
-        # Disable editing to make output read-only
-        self.output_area.config(state='disabled')
-
-    # Configure tags with colors and fonts for the output area
     def setup_tags(self):
-        self.output_area.tag_config('header', foreground=COLORS['header'], font=("Consolas", 13, "bold"))
-        self.output_area.tag_config('label', foreground=COLORS['label'], font=("Consolas", 12, "bold"))
-        self.output_area.tag_config('result', foreground=COLORS['result'], font=("Consolas", 12))
-        self.output_area.tag_config('input_label', foreground=COLORS['input_label'], font=("Consolas", 12, "bold"))
+        """
+        Настраивает стили (теги) для текста в области вывода.
+        Разные части текста будут окрашены в разные цвета.
+        """
+        style = ttk.Style()
+        style.configure('Input.TLabel', foreground=COLORS['input_label'], font=('Arial', 12, 'bold'))
 
-# Entry point: create and run the application
+        tags_config = {
+            'header': {'foreground': COLORS['header'], 'font': ('Consolas', 13, 'bold')},
+            'label': {'foreground': COLORS['label'], 'font': ('Consolas', 12, 'bold')},
+            'result': {'foreground': COLORS['result'], 'font': ('Consolas', 12)},
+            'warning': {'foreground': COLORS['warning'], 'font': ('Consolas', 10, 'italic')}
+        }
+
+        for tag, config in tags_config.items():
+            self.output_area.tag_configure(tag, **config)
+
+    def on_text_change(self, event=None):
+        """
+        Обработчик события изменения текста в поле ввода.
+        Запускает обновление результатов в отдельном потоке,
+        чтобы не блокировать интерфейс.
+        """
+        text = self.entry_text.get()
+        threading.Thread(target=self.safe_update_output, args=(text,), daemon=True).start()
+
+    def safe_update_output(self, text):
+        """
+        Обновляет область вывода с результатами кодирования и хеширования.
+        Выполняется в отдельном потоке, с защитой от ошибок.
+        """
+        try:
+            # Разрешаем редактирование текстового поля
+            self.output_area.config(state='normal')
+            self.output_area.delete('1.0', tk.END)  # Очищаем предыдущий вывод
+
+            # Формируем словарь с результатами
+            results = {
+                'Base64': base64.b64encode(text.encode()).decode(),
+                'Base64 URL-safe': base64.urlsafe_b64encode(text.encode()).decode(),
+                'SHA3-256': encode_sha3_256(text),
+                'BLAKE2b': encode_blake2b(text),
+                'Caesar': caesar_cipher(text, int(self.caesar_shift.get())),
+                'Atbash': atbash_cipher(text),
+                'XOR': self.xor_cipher(text)
+            }
+
+            # Добавляем устаревшие алгоритмы, если включено отображение
+            if self.show_deprecated.get():
+                results.update({
+                    'MD5 (ненадежно!)': hashlib.md5(text.encode()).hexdigest(),
+                    'SHA1 (ненадежно!)': hashlib.sha1(text.encode()).hexdigest()
+                })
+
+            # Выводим заголовок
+            self.output_area.insert(tk.END, "----- РЕЗУЛЬТАТЫ -----\n", 'header')
+
+            # Выводим результаты с форматированием
+            for label, value in results.items():
+                self.output_area.insert(tk.END, f"{label:20}", 'label')
+                self.output_area.insert(tk.END, f"{value}\n", 'result')
+
+            # Вывод предупреждений, если есть
+            self.output_area.insert(tk.END, "\nПредупреждения:\n", 'header')
+            self.check_warnings(text)
+
+        except Exception as e:
+            # При ошибках показываем окно с сообщением
+            messagebox.showerror("Ошибка", f"Ошибка обработки: {str(e)}")
+        finally:
+            # Блокируем редактирование текстового поля
+            self.output_area.config(state='disabled')
+
+    def xor_cipher(self, s):
+        """
+        Применяет XOR-шифр к строке с указанным ключом.
+        Возвращает результат в виде шестнадцатеричной строки.
+        Если ключ некорректен, возвращает сообщение об ошибке.
+        """
+        try:
+            key = int(self.xor_key.get())
+            xored_bytes = bytes([b ^ key for b in s.encode()])
+            return xored_bytes.hex()
+        except ValueError:
+            return "Некорректный ключ!"
+
+    def check_warnings(self, text):
+        """
+        Проверяет текст на потенциальные проблемы и выводит предупреждения.
+        Например, наличие буквы Ё или использование устаревших алгоритмов.
+        """
+        warnings = []
+        if any(c in 'Ёё' for c in text):
+            warnings.append("Обнаружены буквы Ё/ё - некоторые алгоритмы могут работать некорректно.")
+
+        if self.show_deprecated.get():
+            warnings.append("Используются устаревшие алгоритмы (MD5/SHA1) - не рекомендуется!")
+
+        # Выводим каждое предупреждение в отдельной строке
+        for warn in warnings:
+            self.output_area.insert(tk.END, f"⚠ {warn}\n", 'warning')
+
 if __name__ == "__main__":
     app = CipherApp()
-    app.setup_tags()  # Setup text tags for coloring
-    app.mainloop()    # Start Tkinter event loop
+    app.mainloop()
