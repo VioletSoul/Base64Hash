@@ -8,7 +8,7 @@ from tkinter import scrolledtext
 COLORS = {
     'header': '#DAA520',   # Golden color for headers and separators
     'label': '#1E90FF',    # Dodger blue for labels (algorithm names)
-    'result': '#D3D3D3',   # Light gray for the encoded/hash results
+    'result': '#949494',   # Light gray for the encoded/hash results
     'input_label': '#228B22',  # Forest green for input label
 }
 
