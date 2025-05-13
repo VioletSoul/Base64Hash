@@ -1,12 +1,10 @@
 import base64
 import hashlib
-import codecs
 import tkinter as tk
-from tkinter import ttk, messagebox
-from tkinter import scrolledtext
+from tkinter import ttk, scrolledtext
 import threading
 
-# Цветовая схема для различных частей интерфейса
+# Цвета для оформления интерфейса
 COLORS = {
     'header': '#DAA520',       # Золотистый цвет для заголовков
     'label': '#1E90FF',        # Синий для названий алгоритмов
@@ -15,30 +13,26 @@ COLORS = {
     'warning': '#FF4500'       # Оранжево-красный для предупреждений
 }
 
-# region Создание русского алфавита с буквой Ё
 def make_russian_alphabet():
     """
-    Создает списки русских заглавных и строчных букв, включая букву Ё/ё,
+    Создаёт списки русских заглавных и строчных букв, включая букву Ё/ё,
     так как она не входит в непрерывный диапазон Unicode.
     """
     rus_upper = [chr(c) for c in range(ord('А'), ord('Е')+1)]  # А-Е
-    rus_upper += ['Ё']  # Добавляем Ё
-    rus_upper += [chr(c) for c in range(ord('Ж'), ord('Я')+1)]  # Ж-Я
-    rus_lower = [c.lower() for c in rus_upper]  # Строчные буквы
+    rus_upper += ['Ё']                                         # Ё
+    rus_upper += [chr(c) for c in range(ord('Ж'), ord('Я')+1)] # Ж-Я
+    rus_lower = [c.lower() for c in rus_upper]                 # строчные буквы
     return rus_upper, rus_lower
 
-# Глобальные переменные с алфавитами для шифров
+# Глобальные списки алфавитов для шифров
 RUS_UPPER, RUS_LOWER = make_russian_alphabet()
 ENG_UPPER = [chr(c) for c in range(ord('A'), ord('Z')+1)]
 ENG_LOWER = [chr(c) for c in range(ord('a'), ord('z')+1)]
-# endregion
 
-# region Функция Цезаря с поддержкой русского и английского алфавитов
 def caesar_cipher(text, shift=3):
     """
-    Применяет шифр Цезаря с заданным сдвигом ко всем буквам текста.
-    Поддерживает английский и русский алфавиты, включая букву Ё.
-    Небуквенные символы остаются без изменений.
+    Шифр Цезаря с поддержкой русского и английского алфавитов.
+    Сдвигает буквы на заданное число позиций, остальные символы не меняет.
     """
     result = []
     for char in text:
@@ -55,17 +49,13 @@ def caesar_cipher(text, shift=3):
             idx = RUS_LOWER.index(char)
             result.append(RUS_LOWER[(idx + shift) % 33])
         else:
-            # Все остальные символы (пробелы, цифры, знаки) не меняются
             result.append(char)
     return ''.join(result)
-# endregion
 
-# region Функция Атбаш с поддержкой русского и английского алфавитов
 def atbash_cipher(text):
     """
-    Реализует шифр Атбаш - замену буквы на "зеркальную" в алфавите.
-    Работает с английским и русским алфавитами (включая Ё).
-    Небуквенные символы остаются без изменений.
+    Шифр Атбаш - замена буквы на "зеркальную" в алфавите.
+    Поддерживает русский и английский алфавиты.
     """
     result = []
     for char in text:
@@ -80,26 +70,23 @@ def atbash_cipher(text):
         else:
             result.append(char)
     return ''.join(result)
-# endregion
 
-# region Современные алгоритмы хеширования
 def encode_sha3_256(s):
     """
-    Возвращает хеш SHA3-256 от строки s в шестнадцатеричном виде.
+    Возвращает SHA3-256 хеш строки в шестнадцатеричном виде.
     """
     return hashlib.sha3_256(s.encode('utf-8')).hexdigest()
 
 def encode_blake2b(s):
     """
-    Возвращает хеш BLAKE2b от строки s в шестнадцатеричном виде.
+    Возвращает BLAKE2b хеш строки в шестнадцатеричном виде.
     """
     return hashlib.blake2b(s.encode('utf-8')).hexdigest()
-# endregion
 
 class CipherApp(tk.Tk):
     """
-    Основной класс приложения - графический интерфейс для кодирования и хеширования текста.
-    Позволяет вводить текст и видеть результаты в реальном времени.
+    Главное окно приложения с интерфейсом для ввода текста,
+    выбора параметров и отображения результатов и предупреждений.
     """
 
     def __init__(self):
@@ -110,53 +97,57 @@ class CipherApp(tk.Tk):
         # Переменные для параметров шифров
         self.xor_key = tk.StringVar(value='42')       # Ключ для XOR-шифра
         self.caesar_shift = tk.StringVar(value='3')   # Сдвиг для шифра Цезаря
-        self.show_deprecated = tk.BooleanVar(value=False)  # Показывать ли устаревшие алгоритмы
+        self.show_deprecated = tk.BooleanVar(value=False)  # Показывать устаревшие алгоритмы
 
-        self.create_widgets()  # Создаем виджеты интерфейса
-        self.setup_tags()      # Настраиваем стили для текста
+        self.create_widgets()  # Создаём все виджеты интерфейса
+        self.setup_tags()      # Настраиваем стили текста
 
     def create_widgets(self):
         """
-        Создает и размещает все виджеты интерфейса: поля ввода параметров, текстовое поле ввода,
-        область вывода результатов.
+        Создаёт и размещает виджеты: параметры, поле ввода,
+        область вывода результатов и отдельное окно предупреждений внизу.
         """
         # Панель с параметрами шифров
         params_frame = ttk.Frame(self)
         params_frame.pack(fill='x', padx=10, pady=5)
 
-        # Метка и поле для ключа XOR
         ttk.Label(params_frame, text="Ключ XOR:").grid(row=0, column=0, sticky='w')
         ttk.Entry(params_frame, textvariable=self.xor_key, width=5).grid(row=0, column=1, sticky='w')
 
-        # Метка и поле для сдвига Цезаря
         ttk.Label(params_frame, text="Сдвиг Цезаря:").grid(row=0, column=2, padx=10, sticky='w')
         ttk.Entry(params_frame, textvariable=self.caesar_shift, width=5).grid(row=0, column=3, sticky='w')
 
-        # Чекбокс для отображения устаревших алгоритмов
         ttk.Checkbutton(params_frame, text="Показывать устаревшие алгоритмы",
                         variable=self.show_deprecated).grid(row=0, column=4, padx=10, sticky='w')
 
         # Метка для поля ввода текста
         ttk.Label(self, text="Введите текст:", style='Input.TLabel').pack(anchor='w', padx=10)
 
-        # Поле ввода текста
-        self.entry_text = ttk.Entry(self, font=('Consolas', 14))
+        # Поле ввода текста с прокруткой
+        self.entry_text = scrolledtext.ScrolledText(self, font=('Consolas', 14), height=6)
         self.entry_text.pack(fill='x', padx=10, pady=5)
 
-        # Область вывода с полосой прокрутки
+        # Область вывода результатов (с прокруткой)
         self.output_area = scrolledtext.ScrolledText(self, state='disabled')
         self.output_area.pack(expand=True, fill='both', padx=10, pady=10)
 
-        # Привязка события изменения текста к обработчику
+        # Отдельное окно предупреждений, закреплённое внизу
+        warnings_label = ttk.Label(self, text="Предупреждения:", style='Warning.TLabel')
+        warnings_label.pack(anchor='w', padx=10)
+
+        self.warnings_area = scrolledtext.ScrolledText(self, height=6, state='disabled', foreground=COLORS['warning'])
+        self.warnings_area.pack(fill='x', padx=10, pady=(0,10))
+
+        # Привязываем обработчик изменения текста без задержек
         self.entry_text.bind('<KeyRelease>', self.on_text_change)
 
     def setup_tags(self):
         """
-        Настраивает стили (теги) для текста в области вывода.
-        Разные части текста будут окрашены в разные цвета.
+        Настраивает стили (теги) для текста в области вывода результатов.
         """
         style = ttk.Style()
         style.configure('Input.TLabel', foreground=COLORS['input_label'], font=('Arial', 12, 'bold'))
+        style.configure('Warning.TLabel', foreground=COLORS['warning'], font=('Arial', 12, 'bold'))
 
         tags_config = {
             'header': {'foreground': COLORS['header'], 'font': ('Consolas', 13, 'bold')},
@@ -170,88 +161,109 @@ class CipherApp(tk.Tk):
 
     def on_text_change(self, event=None):
         """
-        Обработчик события изменения текста в поле ввода.
-        Запускает обновление результатов в отдельном потоке,
-        чтобы не блокировать интерфейс.
+        Запускает вычисления в отдельном потоке при каждом изменении текста.
+        Это обеспечивает отзывчивость интерфейса без задержек.
         """
-        text = self.entry_text.get()
-        threading.Thread(target=self.safe_update_output, args=(text,), daemon=True).start()
+        text = self.entry_text.get('1.0', 'end-1c')
+        threading.Thread(target=self.compute_results_thread, args=(text,), daemon=True).start()
 
-    def safe_update_output(self, text):
+    def compute_results_thread(self, text):
         """
-        Обновляет область вывода с результатами кодирования и хеширования.
-        Выполняется в отдельном потоке, с защитой от ошибок.
+        Выполняет вычисления в отдельном потоке:
+        - кодирование и хеширование
+        - проверка параметров
+        - формирование предупреждений
+        После вычислений обновляет интерфейс в главном потоке.
         """
+        results = {}
+        warnings = []
+
+        # Проверка и конвертация сдвига Цезаря
         try:
-            # Разрешаем редактирование текстового поля
-            self.output_area.config(state='normal')
-            self.output_area.delete('1.0', tk.END)  # Очищаем предыдущий вывод
+            shift = int(self.caesar_shift.get())
+        except ValueError:
+            shift = None
+            warnings.append("Сдвиг Цезаря должен быть целым числом!")
 
-            # Формируем словарь с результатами
-            results = {
-                'Base64': base64.b64encode(text.encode()).decode(),
-                'Base64 URL-safe': base64.urlsafe_b64encode(text.encode()).decode(),
-                'SHA3-256': encode_sha3_256(text),
-                'BLAKE2b': encode_blake2b(text),
-                'Caesar': caesar_cipher(text, int(self.caesar_shift.get())),
-                'Atbash': atbash_cipher(text),
-                'XOR': self.xor_cipher(text)
-            }
+        # Проверка и конвертация ключа XOR
+        try:
+            xor_key = int(self.xor_key.get())
+            if not (0 <= xor_key <= 255):
+                warnings.append("Ключ XOR должен быть в диапазоне 0-255!")
+                xor_key = None
+        except ValueError:
+            warnings.append("Ключ XOR должен быть целым числом!")
+            xor_key = None
 
-            # Добавляем устаревшие алгоритмы, если включено отображение
+        try:
+            # Основные алгоритмы кодирования и хеширования
+            results['Base64'] = base64.b64encode(text.encode()).decode()
+            results['Base64 URL-safe'] = base64.urlsafe_b64encode(text.encode()).decode()
+            results['SHA3-256'] = encode_sha3_256(text)
+            results['BLAKE2b'] = encode_blake2b(text)
+
+            # Цезарь, если сдвиг корректен
+            if shift is not None:
+                results['Caesar'] = caesar_cipher(text, shift)
+            else:
+                results['Caesar'] = "Ошибка сдвига!"
+
+            # Атбаш
+            results['Atbash'] = atbash_cipher(text)
+
+            # XOR, если ключ корректен
+            if xor_key is not None:
+                results['XOR'] = self.xor_cipher(text, xor_key)
+            else:
+                results['XOR'] = "Ошибка ключа XOR!"
+
+            # Устаревшие алгоритмы, если включены
             if self.show_deprecated.get():
-                results.update({
-                    'MD5 (ненадежно!)': hashlib.md5(text.encode()).hexdigest(),
-                    'SHA1 (ненадежно!)': hashlib.sha1(text.encode()).hexdigest()
-                })
+                results['MD5 (ненадежно!)'] = hashlib.md5(text.encode()).hexdigest()
+                results['SHA1 (ненадежно!)'] = hashlib.sha1(text.encode()).hexdigest()
 
-            # Выводим заголовок
-            self.output_area.insert(tk.END, "----- РЕЗУЛЬТАТЫ -----\n", 'header')
+            # Предупреждения по тексту
+            if any(c in 'Ёё' for c in text):
+                warnings.append("Обнаружены буквы Ё/ё - некоторые алгоритмы могут работать некорректно.")
 
-            # Выводим результаты с форматированием
-            for label, value in results.items():
-                self.output_area.insert(tk.END, f"{label:20}", 'label')
-                self.output_area.insert(tk.END, f"{value}\n", 'result')
-
-            # Вывод предупреждений, если есть
-            self.output_area.insert(tk.END, "\nПредупреждения:\n", 'header')
-            self.check_warnings(text)
+            if self.show_deprecated.get():
+                warnings.append("Используются устаревшие алгоритмы (MD5/SHA1) - не рекомендуется!")
 
         except Exception as e:
-            # При ошибках показываем окно с сообщением
-            messagebox.showerror("Ошибка", f"Ошибка обработки: {str(e)}")
-        finally:
-            # Блокируем редактирование текстового поля
-            self.output_area.config(state='disabled')
+            warnings.append(f"Ошибка обработки данных: {str(e)}")
 
-    def xor_cipher(self, s):
+        # Обновление интерфейса в главном потоке
+        self.after(0, self.update_output_area, results, warnings)
+
+    def update_output_area(self, results, warnings):
+        """
+        Обновляет текстовые области с результатами и предупреждениями.
+        """
+        # Обновляем область результатов
+        self.output_area.config(state='normal')
+        self.output_area.delete('1.0', tk.END)
+
+        self.output_area.insert(tk.END, "----- РЕЗУЛЬТАТЫ -----\n", 'header')
+        for label, value in results.items():
+            self.output_area.insert(tk.END, f"{label:20}", 'label')
+            self.output_area.insert(tk.END, f"{value}\n", 'result')
+        self.output_area.config(state='disabled')
+
+        # Обновляем область предупреждений
+        self.warnings_area.config(state='normal')
+        self.warnings_area.delete('1.0', tk.END)
+        if warnings:
+            for warn in warnings:
+                self.warnings_area.insert(tk.END, f"⚠ {warn}\n")
+        self.warnings_area.config(state='disabled')
+
+    def xor_cipher(self, s, key):
         """
         Применяет XOR-шифр к строке с указанным ключом.
         Возвращает результат в виде шестнадцатеричной строки.
-        Если ключ некорректен, возвращает сообщение об ошибке.
         """
-        try:
-            key = int(self.xor_key.get())
-            xored_bytes = bytes([b ^ key for b in s.encode()])
-            return xored_bytes.hex()
-        except ValueError:
-            return "Некорректный ключ!"
-
-    def check_warnings(self, text):
-        """
-        Проверяет текст на потенциальные проблемы и выводит предупреждения.
-        Например, наличие буквы Ё или использование устаревших алгоритмов.
-        """
-        warnings = []
-        if any(c in 'Ёё' for c in text):
-            warnings.append("Обнаружены буквы Ё/ё - некоторые алгоритмы могут работать некорректно.")
-
-        if self.show_deprecated.get():
-            warnings.append("Используются устаревшие алгоритмы (MD5/SHA1) - не рекомендуется!")
-
-        # Выводим каждое предупреждение в отдельной строке
-        for warn in warnings:
-            self.output_area.insert(tk.END, f"⚠ {warn}\n", 'warning')
+        xored_bytes = bytes([b ^ key for b in s.encode()])
+        return xored_bytes.hex()
 
 if __name__ == "__main__":
     app = CipherApp()
