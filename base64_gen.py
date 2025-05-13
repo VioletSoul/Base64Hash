@@ -104,11 +104,36 @@ class CipherApp(tk.Tk):
 
     def create_widgets(self):
         """
-        Создаёт и размещает виджеты: параметры, поле ввода,
-        область вывода результатов и отдельное окно предупреждений внизу.
+        Создаёт и размещает вкладки и виджеты:
+        - Вкладка с основным функционалом шифров и хешей
+        - Вкладка с Base64 декодированием с двумя полями, разделёнными вертикально
         """
-        # Панель с параметрами шифров
-        params_frame = ttk.Frame(self)
+        # Создаём объект вкладок
+        self.notebook = ttk.Notebook(self)
+        self.notebook.pack(expand=True, fill='both')
+
+        # Вкладка с основным функционалом шифров и хешей
+        self.tab_cipher = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab_cipher, text="Шифры и хеши")
+
+        # Вкладка с Base64 декодированием
+        self.tab_base64 = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab_base64, text="Base64 декодирование")
+
+        # Заполняем вкладки соответствующими виджетами
+        self.create_cipher_tab()
+        self.create_base64_tab()
+
+    def create_cipher_tab(self):
+        """
+        Создаёт интерфейс вкладки с шифрами и хешами:
+        - Панель параметров (ключ XOR, сдвиг Цезаря, чекбокс устаревших алгоритмов)
+        - Поле ввода текста
+        - Метка и область вывода результатов
+        - Метка и область вывода предупреждений
+        """
+        # Панель параметров
+        params_frame = ttk.Frame(self.tab_cipher)
         params_frame.pack(fill='x', padx=10, pady=5)
 
         ttk.Label(params_frame, text="Ключ XOR:").grid(row=0, column=0, sticky='w')
@@ -121,32 +146,62 @@ class CipherApp(tk.Tk):
                         variable=self.show_deprecated).grid(row=0, column=4, padx=10, sticky='w')
 
         # Метка для поля ввода текста
-        ttk.Label(self, text="Введите текст:", style='Input.TLabel').pack(anchor='w', padx=10)
+        ttk.Label(self.tab_cipher, text="Введите текст:", style='Input.TLabel').pack(anchor='w', padx=10)
 
-        # Поле ввода текста с прокруткой
-        self.entry_text = scrolledtext.ScrolledText(self, font=('Consolas', 14), height=6)
+        # Многострочное поле ввода текста с прокруткой
+        self.entry_text = scrolledtext.ScrolledText(self.tab_cipher, font=('Consolas', 14), height=6)
         self.entry_text.pack(fill='x', padx=10, pady=5)
 
         # Метка над областью вывода результатов
-        ttk.Label(self, text="Результаты:", style='Output.TLabel').pack(anchor='w', padx=10)
+        ttk.Label(self.tab_cipher, text="Результаты:", style='Output.TLabel').pack(anchor='w', padx=10)
 
-        # Область вывода результатов (с прокруткой)
-        self.output_area = scrolledtext.ScrolledText(self, state='disabled')
+        # Область вывода результатов с прокруткой (только для чтения)
+        self.output_area = scrolledtext.ScrolledText(self.tab_cipher, state='disabled')
         self.output_area.pack(expand=True, fill='both', padx=10, pady=10)
 
-        # Метка над окном предупреждений
-        ttk.Label(self, text="Предупреждения:", style='Warning.TLabel').pack(anchor='w', padx=10)
+        # Метка над областью предупреждений
+        ttk.Label(self.tab_cipher, text="Предупреждения:", style='Warning.TLabel').pack(anchor='w', padx=10)
 
-        # Отдельное окно предупреждений, закреплённое внизу
-        self.warnings_area = scrolledtext.ScrolledText(self, height=6, state='disabled', foreground=COLORS['warning'])
+        # Область предупреждений с прокруткой (только для чтения)
+        self.warnings_area = scrolledtext.ScrolledText(self.tab_cipher, height=6, state='disabled', foreground=COLORS['warning'])
         self.warnings_area.pack(fill='x', padx=10, pady=(0,10))
 
-        # Привязываем обработчик изменения текста без задержек
+        # Привязываем обработчик изменения текста для запуска обновления результатов
         self.entry_text.bind('<KeyRelease>', self.on_text_change)
+
+    def create_base64_tab(self):
+        """
+        Создаёт интерфейс вкладки Base64 декодирования:
+        - Два многострочных текстовых поля, разделённых горизонтально
+          (слева - ввод Base64, справа - декодированный текст)
+        - Метки над каждым полем
+        """
+        # Основной фрейм для двух областей
+        main_frame = ttk.Frame(self.tab_base64)
+        main_frame.pack(expand=True, fill='both', padx=10, pady=10)
+
+        # Левая часть: ввод Base64 для декодирования
+        left_frame = ttk.Frame(main_frame)
+        left_frame.pack(side='top', fill='both', expand=True, pady=(0,5))
+
+        ttk.Label(left_frame, text="Base64 код:", style='Input.TLabel').pack(anchor='w')
+        self.base64_encode_input = scrolledtext.ScrolledText(left_frame, font=('Consolas', 12), height=15)
+        self.base64_encode_input.pack(expand=True, fill='both')
+
+        # Правая часть: вывод декодированного текста
+        right_frame = ttk.Frame(main_frame)
+        right_frame.pack(side='top', fill='both', expand=True)
+
+        ttk.Label(right_frame, text="Декодированный текст:", style='Output.TLabel').pack(anchor='w')
+        self.base64_decode_output = scrolledtext.ScrolledText(right_frame, font=('Consolas', 12), height=15, state='disabled')
+        self.base64_decode_output.pack(expand=True, fill='both')
+
+        # Привязываем обработчик для автоматического декодирования при вводе
+        self.base64_encode_input.bind('<KeyRelease>', self.on_base64_encode_change)
 
     def setup_tags(self):
         """
-        Настраивает стили (теги) для текста в области вывода результатов.
+        Настраивает стили (теги) для текста и меток в интерфейсе.
         """
         style = ttk.Style()
         style.configure('Input.TLabel', foreground=COLORS['input_label'], font=('Arial', 12, 'bold'))
@@ -164,31 +219,28 @@ class CipherApp(tk.Tk):
 
     def on_text_change(self, event=None):
         """
-        Запускает вычисления в отдельном потоке при каждом изменении текста.
-        Это обеспечивает отзывчивость интерфейса без задержек.
+        Обработчик изменения текста в поле ввода основной вкладки.
+        Запускает вычисления в отдельном потоке для отзывчивости интерфейса.
         """
         text = self.entry_text.get('1.0', 'end-1c')
         threading.Thread(target=self.compute_results_thread, args=(text,), daemon=True).start()
 
     def compute_results_thread(self, text):
         """
-        Выполняет вычисления в отдельном потоке:
-        - кодирование и хеширование
-        - проверка параметров
-        - формирование предупреждений
-        После вычислений обновляет интерфейс в главном потоке.
+        Выполняет вычисления шифров и хешей в отдельном потоке.
+        Формирует результаты и предупреждения, затем обновляет интерфейс.
         """
         results = {}
         warnings = []
 
-        # Проверка и конвертация сдвига Цезаря
+        # Проверка корректности сдвига Цезаря
         try:
             shift = int(self.caesar_shift.get())
         except ValueError:
             shift = None
             warnings.append("Сдвиг Цезаря должен быть целым числом!")
 
-        # Проверка и конвертация ключа XOR
+        # Проверка корректности ключа XOR
         try:
             xor_key = int(self.xor_key.get())
             if not (0 <= xor_key <= 255):
@@ -199,22 +251,22 @@ class CipherApp(tk.Tk):
             xor_key = None
 
         try:
-            # Основные алгоритмы кодирования и хеширования
+            # Вычисление основных кодировок и хешей
             results['Base64'] = base64.b64encode(text.encode()).decode()
             results['Base64 URL-safe'] = base64.urlsafe_b64encode(text.encode()).decode()
             results['SHA3-256'] = encode_sha3_256(text)
             results['BLAKE2b'] = encode_blake2b(text)
 
-            # Цезарь, если сдвиг корректен
+            # Шифр Цезаря с проверкой
             if shift is not None:
                 results['Caesar'] = caesar_cipher(text, shift)
             else:
                 results['Caesar'] = "Ошибка сдвига!"
 
-            # Атбаш
+            # Шифр Атбаш
             results['Atbash'] = atbash_cipher(text)
 
-            # XOR, если ключ корректен
+            # XOR-шифр с проверкой
             if xor_key is not None:
                 results['XOR'] = self.xor_cipher(text, xor_key)
             else:
@@ -225,7 +277,7 @@ class CipherApp(tk.Tk):
                 results['MD5 (ненадежно!)'] = hashlib.md5(text.encode()).hexdigest()
                 results['SHA1 (ненадежно!)'] = hashlib.sha1(text.encode()).hexdigest()
 
-            # Предупреждения по тексту
+            # Предупреждения по содержимому текста
             if any(c in 'Ёё' for c in text):
                 warnings.append("Обнаружены буквы Ё/ё - некоторые алгоритмы могут работать некорректно.")
 
@@ -235,14 +287,14 @@ class CipherApp(tk.Tk):
         except Exception as e:
             warnings.append(f"Ошибка обработки данных: {str(e)}")
 
-        # Обновление интерфейса в главном потоке
+        # Обновляем интерфейс в главном потоке
         self.after(0, self.update_output_area, results, warnings)
 
     def update_output_area(self, results, warnings):
         """
-        Обновляет текстовые области с результатами и предупреждениями.
+        Обновляет области вывода результатов и предупреждений.
         """
-        # Обновляем область результатов
+        # Обновляем результаты
         self.output_area.config(state='normal')
         self.output_area.delete('1.0', tk.END)
 
@@ -251,7 +303,7 @@ class CipherApp(tk.Tk):
             self.output_area.insert(tk.END, f"{value}\n", 'result')
         self.output_area.config(state='disabled')
 
-        # Обновляем область предупреждений
+        # Обновляем предупреждения
         self.warnings_area.config(state='normal')
         self.warnings_area.delete('1.0', tk.END)
         if warnings:
@@ -266,6 +318,34 @@ class CipherApp(tk.Tk):
         """
         xored_bytes = bytes([b ^ key for b in s.encode()])
         return xored_bytes.hex()
+
+    def on_base64_encode_change(self, event=None):
+        """
+        Обработчик изменения текста в поле Base64 декодирования.
+        Пытается декодировать Base64 и выводит результат в соседнем поле.
+        При ошибке выводит сообщение об ошибке.
+        """
+        encoded_text = self.base64_encode_input.get('1.0', 'end-1c').strip()
+        if not encoded_text:
+            # Если поле пустое, очищаем вывод
+            self.base64_decode_output.config(state='normal')
+            self.base64_decode_output.delete('1.0', tk.END)
+            self.base64_decode_output.config(state='disabled')
+            return
+
+        try:
+            # Пытаемся декодировать Base64 с проверкой валидности
+            decoded_bytes = base64.b64decode(encoded_text, validate=True)
+            # Декодируем байты в строку UTF-8, заменяя некорректные символы
+            decoded_str = decoded_bytes.decode('utf-8', errors='replace')
+        except Exception:
+            decoded_str = "[Ошибка: некорректный Base64]"
+
+        # Обновляем поле вывода декодированного текста
+        self.base64_decode_output.config(state='normal')
+        self.base64_decode_output.delete('1.0', tk.END)
+        self.base64_decode_output.insert(tk.END, decoded_str)
+        self.base64_decode_output.config(state='disabled')
 
 if __name__ == "__main__":
     app = CipherApp()
