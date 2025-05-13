@@ -91,7 +91,7 @@ class CipherApp(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("Кодировщик")
+        self.title("Base64+ Кодировщик")
         self.geometry("1000x750")
 
         # Переменные для параметров шифров
