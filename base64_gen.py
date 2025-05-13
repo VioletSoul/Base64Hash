@@ -127,14 +127,17 @@ class CipherApp(tk.Tk):
         self.entry_text = scrolledtext.ScrolledText(self, font=('Consolas', 14), height=6)
         self.entry_text.pack(fill='x', padx=10, pady=5)
 
+        # Метка над областью вывода результатов
+        ttk.Label(self, text="Результаты:", style='Output.TLabel').pack(anchor='w', padx=10)
+
         # Область вывода результатов (с прокруткой)
         self.output_area = scrolledtext.ScrolledText(self, state='disabled')
         self.output_area.pack(expand=True, fill='both', padx=10, pady=10)
 
-        # Отдельное окно предупреждений, закреплённое внизу
-        warnings_label = ttk.Label(self, text="Предупреждения:", style='Warning.TLabel')
-        warnings_label.pack(anchor='w', padx=10)
+        # Метка над окном предупреждений
+        ttk.Label(self, text="Предупреждения:", style='Warning.TLabel').pack(anchor='w', padx=10)
 
+        # Отдельное окно предупреждений, закреплённое внизу
         self.warnings_area = scrolledtext.ScrolledText(self, height=6, state='disabled', foreground=COLORS['warning'])
         self.warnings_area.pack(fill='x', padx=10, pady=(0,10))
 
@@ -147,10 +150,10 @@ class CipherApp(tk.Tk):
         """
         style = ttk.Style()
         style.configure('Input.TLabel', foreground=COLORS['input_label'], font=('Arial', 12, 'bold'))
+        style.configure('Output.TLabel', foreground=COLORS['header'], font=('Arial', 12, 'bold'))
         style.configure('Warning.TLabel', foreground=COLORS['warning'], font=('Arial', 12, 'bold'))
 
         tags_config = {
-            'header': {'foreground': COLORS['header'], 'font': ('Consolas', 13, 'bold')},
             'label': {'foreground': COLORS['label'], 'font': ('Consolas', 12, 'bold')},
             'result': {'foreground': COLORS['result'], 'font': ('Consolas', 12)},
             'warning': {'foreground': COLORS['warning'], 'font': ('Consolas', 10, 'italic')}
@@ -243,7 +246,6 @@ class CipherApp(tk.Tk):
         self.output_area.config(state='normal')
         self.output_area.delete('1.0', tk.END)
 
-        self.output_area.insert(tk.END, "----- РЕЗУЛЬТАТЫ -----\n", 'header')
         for label, value in results.items():
             self.output_area.insert(tk.END, f"{label:20}", 'label')
             self.output_area.insert(tk.END, f"{value}\n", 'result')
