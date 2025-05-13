@@ -1,85 +1,78 @@
-# Encoder
+# Base64+ Encoder
 
-A versatile application for encoding and hashing text.
-
----
-
-## Description
-
-This is a simple yet powerful Python graphical application that allows you to quickly obtain various types of encodings and hashes from the input text. The program supports a wide range of algorithms, including modern and classical ones, and lets you customize parameters for certain ciphers.
+**Base64+ Encoder** is a convenient and functional graphical application written in Python using Tkinter, designed for encoding, encrypting, and hashing text. The program supports various algorithms and provides a user-friendly tabbed interface for different tasks.
 
 ---
 
 ## Key Features
 
-- **Encoding:**
-  - Base64 (standard and URL-safe)
-  - Caesar cipher with customizable shift
-  - Atbash cipher
-  - XOR cipher with customizable key
+- **Encoding and Encryption**
+    - Base64 (standard and URL-safe)
+    - Caesar cipher supporting Russian and English alphabets (including the letter Ё)
+    - Atbash cipher
+    - XOR cipher with a user-defined key
+    - Deprecated algorithms MD5 and SHA1 (optional)
 
-- **Hashing:**
-  - Modern algorithms SHA3-256 and BLAKE2b
-  - Deprecated MD5 and SHA1 (with warnings about insecurity)
+- **Base64 Decoding**  
+  Enter Base64 code and instantly decode it with result display.
 
-- **Support for Russian and English alphabets:**
-  - Including the letter Ё/ё, which is rarely supported in similar programs
+- **Hashing**
+    - SHA3-256
+    - BLAKE2b
 
-- **Dynamic result updates:**
-  - Encoding and hashing results appear in real-time as you type
+  Each hashing algorithm has its own tab with an input field and automatic hash output.
 
-- **User-friendly and clear interface:**
-  - Color-coded headers, algorithm names, results, and warnings
-
-- **Input validation and error handling:**
-  - The program informs users about invalid parameters and remains stable
-
-- **Multithreading:**
-  - Calculations run in a separate thread to keep the interface responsive
+- **Thread Safety and Responsiveness**  
+  All computations run in separate threads to ensure a smooth and responsive interface without freezes.
 
 ---
 
-## Who is this program for?
+## Interface
 
-- Developers needing to quickly verify various encodings and hashes
-- Students and educators studying cryptography and encoding
-- Anyone interested in encryption and experimenting with different algorithms
-- Users who want to convert text into various formats without complex commands or setup
+The application is organized into tabs:
 
----
+1. **Ciphers and Encoding** – text input, cipher parameters, and display of encoding and encryption results.
+2. **Base64 Decoding** – two windows: Base64 input and decoded text output.
+3. **SHA3-256 Hashing** – text input and SHA3-256 hash display.
+4. **BLAKE2b Hashing** – text input and BLAKE2b hash display.
 
-## How to use
-
-1. Launch the program.
-2. Enter text into the input field at the top.
-3. Configure parameters:
-   - XOR key (integer from 0 to 255)
-   - Caesar cipher shift (integer)
-   - Check the box if you want to see deprecated algorithms (MD5, SHA1)
-4. The results will automatically appear in the output area below.
-5. Pay attention to any warnings displayed.
+Each tab features clear labels and convenient multi-line scrollable text fields.
 
 ---
 
-## Technical details
+## Requirements
 
-- Written in Python 3 using the standard `tkinter` library for the GUI.
-- Utilizes built-in modules `base64`, `hashlib`, and `codecs`.
-- Properly supports Russian language, including the letter Ё.
-- Uses multithreading to keep the interface smooth and responsive.
+- Python 3.6 or higher
+- Standard library modules: `tkinter`, `hashlib`, `base64`, `threading`
+
+---
+
+## Running the Application
+
+1. Download or clone the repository.
+2. Run the script: base64_gen.py
+
+
+---
+
+## Usage Example
+
+- Enter text on the **Ciphers and Encoding** tab, adjust parameters (XOR key, Caesar shift), and results will update automatically.
+- On the **Base64 Decoding** tab, paste a Base64 string - the decoded text will appear instantly.
+- The **SHA3-256 Hashing** and **BLAKE2b Hashing** tabs allow quick generation of hashes from any input text.
 
 ---
 
 ## License
 
-This code and program are freely available for any use. The author is not responsible for how the program is used.
+MIT License
 
 ---
 
 ## Contact
 
-For questions or suggestions, please contact the author via the project repository (if available) or leave feedback.
+If you have any questions or suggestions, please open an issue in the repository.
 
 ---
 
-Thank you for using the program! We hope it will be useful and convenient for your tasks.
+**Base64+ Encoder** is a simple yet powerful tool for working with text and encodings, ideal for learning, testing, and everyday use.
