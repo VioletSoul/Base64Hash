@@ -38,7 +38,10 @@ LANGUAGES = {
             'language_en': 'Английский',
             'error_select_charset': 'Выберите хотя бы один набор символов!',
             'error_invalid_length': 'Неверная длина пароля!',
-            'copied': 'Пароль скопирован в буфер обмена!'
+            'copied': 'Пароль скопирован в буфер обмена!',
+            'xor_key': 'Ключ XOR:',
+            'caesar_shift': 'Сдвиг Цезаря:',
+            'show_deprecated': 'Показывать устаревшие алгоритмы'
         }
     },
     'en': {
@@ -62,7 +65,10 @@ LANGUAGES = {
             'language_en': 'English',
             'error_select_charset': 'Select at least one character set!',
             'error_invalid_length': 'Invalid password length!',
-            'copied': 'Password copied to clipboard!'
+            'copied': 'Password copied to clipboard!',
+            'xor_key': 'XOR Key:',
+            'caesar_shift': 'Caesar Shift:',
+            'show_deprecated': 'Show deprecated algorithms'
         }
     }
 }
@@ -189,7 +195,6 @@ class CipherApp(tk.Tk):
         menubar.add_cascade(label=self.i18n.strings['labels']['language_menu'], menu=lang_menu)
         self.config(menu=menubar)
 
-
     def change_language(self, lang):
         """Меняет язык интерфейса"""
         self.i18n.set_language(lang)
@@ -213,10 +218,9 @@ class CipherApp(tk.Tk):
         self.label_results.config(text=self.i18n.strings['labels']['results'])
         self.label_warnings.config(text=self.i18n.strings['labels']['warnings'])
 
-        # Параметры XOR и Цезарь
-        self.label_xor_key.config(text=self.i18n.strings['labels'].get('xor_key', 'Ключ XOR:'))
-        self.label_caesar_shift.config(text=self.i18n.strings['labels'].get('caesar_shift', 'Сдвиг Цезаря:'))
-        self.checkbox_deprecated.config(text=self.i18n.strings['labels'].get('show_deprecated', 'Показывать устаревшие алгоритмы'))
+        self.label_xor_key.config(text=self.i18n.strings['labels']['xor_key'])
+        self.label_caesar_shift.config(text=self.i18n.strings['labels']['caesar_shift'])
+        self.checkbox_deprecated.config(text=self.i18n.strings['labels']['show_deprecated'])
 
         # Вкладка Base64
         self.label_base64_input.config(text=self.i18n.strings['labels']['input_text'])
@@ -286,17 +290,17 @@ class CipherApp(tk.Tk):
         params_frame.pack(fill='x', padx=10, pady=5)
 
         # XOR key label and entry
-        self.label_xor_key = ttk.Label(params_frame, text="Ключ XOR:")
+        self.label_xor_key = ttk.Label(params_frame, text=self.i18n.strings['labels']['xor_key'])
         self.label_xor_key.grid(row=0, column=0, sticky='w')
         ttk.Entry(params_frame, textvariable=self.xor_key, width=5).grid(row=0, column=1, sticky='w')
 
         # Caesar shift label and entry
-        self.label_caesar_shift = ttk.Label(params_frame, text="Сдвиг Цезаря:")
+        self.label_caesar_shift = ttk.Label(params_frame, text=self.i18n.strings['labels']['caesar_shift'])
         self.label_caesar_shift.grid(row=0, column=2, padx=10, sticky='w')
         ttk.Entry(params_frame, textvariable=self.caesar_shift, width=5).grid(row=0, column=3, sticky='w')
 
         # Checkbox for deprecated algorithms
-        self.checkbox_deprecated = ttk.Checkbutton(params_frame, text="Показывать устаревшие алгоритмы",
+        self.checkbox_deprecated = ttk.Checkbutton(params_frame, text=self.i18n.strings['labels']['show_deprecated'],
                                                    variable=self.show_deprecated)
         self.checkbox_deprecated.grid(row=0, column=4, padx=10, sticky='w')
 
