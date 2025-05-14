@@ -1,8 +1,10 @@
 import base64
 import hashlib
 import tkinter as tk
-from tkinter import ttk, scrolledtext
+from tkinter import ttk, scrolledtext, messagebox
 import threading
+import random
+import string
 
 # Color scheme for UI elements
 COLORS = {
@@ -11,6 +13,58 @@ COLORS = {
     'result': '#949494',       # Light gray for results
     'input_label': '#228B22',  # Green for input labels
     'warning': '#FF4500'       # Orange-red for warnings
+}
+
+# ================== МНОГОЯЗЫЧНАЯ ПОДДЕРЖКА ==================
+LANGUAGES = {
+    'ru': {
+        'app_title': 'Base64+ кодировщик',
+        'tabs': ['Шифры и кодирование', 'Base64 декодирование', 'SHA3-256 хеширование',
+                 'BLAKE2b хеширование', 'Генератор паролей'],
+        'labels': {
+            'input_text': 'Введите текст:',
+            'results': 'Результаты:',
+            'warnings': 'Предупреждения:',
+            'password_length': 'Длина пароля:',
+            'generate_password': 'Сгенерировать',
+            'copy_password': 'Копировать',
+            'charsets': {
+                'letters': 'Буквы',
+                'digits': 'Цифры',
+                'symbols': 'Символы'
+            },
+            'language_menu': '🌐 Язык',
+            'language_ru': 'Русский',
+            'language_en': 'Английский',
+            'error_select_charset': 'Выберите хотя бы один набор символов!',
+            'error_invalid_length': 'Неверная длина пароля!',
+            'copied': 'Пароль скопирован в буфер обмена!'
+        }
+    },
+    'en': {
+        'app_title': 'Base64+ Encoder',
+        'tabs': ['Ciphers & Encoding', 'Base64 Decoding', 'SHA3-256 Hashing',
+                 'BLAKE2b Hashing', 'Password Generator'],
+        'labels': {
+            'input_text': 'Input text:',
+            'results': 'Results:',
+            'warnings': 'Warnings:',
+            'password_length': 'Password length:',
+            'generate_password': 'Generate',
+            'copy_password': 'Copy',
+            'charsets': {
+                'letters': 'Letters',
+                'digits': 'Digits',
+                'symbols': 'Symbols'
+            },
+            'language_menu': '🌐 Language',
+            'language_ru': 'Russian',
+            'language_en': 'English',
+            'error_select_charset': 'Select at least one character set!',
+            'error_invalid_length': 'Invalid password length!',
+            'copied': 'Password copied to clipboard!'
+        }
+    }
 }
 
 def make_russian_alphabet():
@@ -87,17 +141,31 @@ def encode_blake2b(s):
     """
     return hashlib.blake2b(s.encode('utf-8')).hexdigest()
 
+class I18N:
+    """Класс для управления локализацией"""
+    def __init__(self, language='ru'):
+        self.language = language
+        self.strings = LANGUAGES.get(language, LANGUAGES['ru'])
+
+    def set_language(self, lang):
+        self.language = lang
+        self.strings = LANGUAGES.get(lang, LANGUAGES['ru'])
+
 class CipherApp(tk.Tk):
     """
     Main application window class.
-    Provides a tabbed interface for encoding, encryption, and hashing text.
+    Provides a tabbed interface for encoding, encryption, hashing text,
+    and a password generator with multilingual support.
     """
 
     def __init__(self):
         super().__init__()
 
+        # Инициализация локализации
+        self.i18n = I18N()
+
         # Set the window title
-        self.title("Base64+ кодировщик")
+        self.title(self.i18n.strings['app_title'])
 
         # Set the window size
         self.geometry("1000x750")
@@ -108,8 +176,67 @@ class CipherApp(tk.Tk):
         self.show_deprecated = tk.BooleanVar(value=False)  # Whether to show deprecated algorithms (MD5, SHA1)
 
         # Initialize UI components
+        self.create_language_menu()
         self.create_widgets()
         self.setup_tags()
+
+    def create_language_menu(self):
+        """Создаёт меню выбора языка"""
+        menubar = tk.Menu(self)
+        lang_menu = tk.Menu(menubar, tearoff=0)
+        lang_menu.add_command(label=self.i18n.strings['labels']['language_ru'], command=lambda: self.change_language('ru'))
+        lang_menu.add_command(label=self.i18n.strings['labels']['language_en'], command=lambda: self.change_language('en'))
+        menubar.add_cascade(label=self.i18n.strings['labels']['language_menu'], menu=lang_menu)
+        self.config(menu=menubar)
+
+
+    def change_language(self, lang):
+        """Меняет язык интерфейса"""
+        self.i18n.set_language(lang)
+        self.title(self.i18n.strings['app_title'])
+
+        # Обновляем названия вкладок
+        for i, title in enumerate(self.i18n.strings['tabs']):
+            self.notebook.tab(i, text=title)
+
+        # Обновляем меню языка (чтобы перевести пункты)
+        self.create_language_menu()
+
+        # Обновляем остальные элементы интерфейса
+        self.update_all_labels()
+
+    def update_all_labels(self):
+        """Обновляет все текстовые метки в интерфейсе"""
+
+        # Вкладка шифров и кодирования
+        self.label_input_text.config(text=self.i18n.strings['labels']['input_text'])
+        self.label_results.config(text=self.i18n.strings['labels']['results'])
+        self.label_warnings.config(text=self.i18n.strings['labels']['warnings'])
+
+        # Параметры XOR и Цезарь
+        self.label_xor_key.config(text=self.i18n.strings['labels'].get('xor_key', 'Ключ XOR:'))
+        self.label_caesar_shift.config(text=self.i18n.strings['labels'].get('caesar_shift', 'Сдвиг Цезаря:'))
+        self.checkbox_deprecated.config(text=self.i18n.strings['labels'].get('show_deprecated', 'Показывать устаревшие алгоритмы'))
+
+        # Вкладка Base64
+        self.label_base64_input.config(text=self.i18n.strings['labels']['input_text'])
+        self.label_base64_output.config(text=self.i18n.strings['labels']['results'])
+
+        # Вкладка SHA3-256
+        self.label_sha3_input.config(text=self.i18n.strings['labels']['input_text'])
+        self.label_sha3_output.config(text=self.i18n.strings['labels']['results'])
+
+        # Вкладка BLAKE2b
+        self.label_blake2b_input.config(text=self.i18n.strings['labels']['input_text'])
+        self.label_blake2b_output.config(text=self.i18n.strings['labels']['results'])
+
+        # Вкладка генератора паролей
+        self.label_pwd_length.config(text=self.i18n.strings['labels']['password_length'])
+        self.checkbox_letters.config(text=self.i18n.strings['labels']['charsets']['letters'])
+        self.checkbox_digits.config(text=self.i18n.strings['labels']['charsets']['digits'])
+        self.checkbox_symbols.config(text=self.i18n.strings['labels']['charsets']['symbols'])
+        self.btn_generate.config(text=self.i18n.strings['labels']['generate_password'])
+        self.btn_copy.config(text=self.i18n.strings['labels']['copy_password'])
 
     def create_widgets(self):
         """
@@ -121,25 +248,30 @@ class CipherApp(tk.Tk):
 
         # Tab 1: Encoding and ciphers (no hashing)
         self.tab_cipher = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_cipher, text="Шифры и кодирование")  # "Ciphers and Encoding"
+        self.notebook.add(self.tab_cipher, text=self.i18n.strings['tabs'][0])  # "Ciphers and Encoding"
 
         # Tab 2: Base64 decoding
         self.tab_base64 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_base64, text="Base64 декодирование")  # "Base64 Decoding"
+        self.notebook.add(self.tab_base64, text=self.i18n.strings['tabs'][1])  # "Base64 Decoding"
 
         # Tab 3: SHA3-256 hashing
         self.tab_sha3 = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_sha3, text="SHA3-256 хеширование")  # "SHA3-256 Hashing"
+        self.notebook.add(self.tab_sha3, text=self.i18n.strings['tabs'][2])  # "SHA3-256 Hashing"
 
         # Tab 4: BLAKE2b hashing
         self.tab_blake2b = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_blake2b, text="BLAKE2b хеширование")  # "BLAKE2b Hashing"
+        self.notebook.add(self.tab_blake2b, text=self.i18n.strings['tabs'][3])  # "BLAKE2b Hashing"
+
+        # Tab 5: Password generator
+        self.tab_password = ttk.Frame(self.notebook)
+        self.notebook.add(self.tab_password, text=self.i18n.strings['tabs'][4])  # "Password Generator"
 
         # Populate each tab with its widgets
         self.create_cipher_tab()
         self.create_base64_tab()
         self.create_sha3_tab()
         self.create_blake2b_tab()
+        self.create_password_generator_tab()
 
     def create_cipher_tab(self):
         """
@@ -154,37 +286,43 @@ class CipherApp(tk.Tk):
         params_frame.pack(fill='x', padx=10, pady=5)
 
         # XOR key label and entry
-        ttk.Label(params_frame, text="Ключ XOR:").grid(row=0, column=0, sticky='w')
+        self.label_xor_key = ttk.Label(params_frame, text="Ключ XOR:")
+        self.label_xor_key.grid(row=0, column=0, sticky='w')
         ttk.Entry(params_frame, textvariable=self.xor_key, width=5).grid(row=0, column=1, sticky='w')
 
         # Caesar shift label and entry
-        ttk.Label(params_frame, text="Сдвиг Цезаря:").grid(row=0, column=2, padx=10, sticky='w')
+        self.label_caesar_shift = ttk.Label(params_frame, text="Сдвиг Цезаря:")
+        self.label_caesar_shift.grid(row=0, column=2, padx=10, sticky='w')
         ttk.Entry(params_frame, textvariable=self.caesar_shift, width=5).grid(row=0, column=3, sticky='w')
 
         # Checkbox for deprecated algorithms
-        ttk.Checkbutton(params_frame, text="Показывать устаревшие алгоритмы",
-                        variable=self.show_deprecated).grid(row=0, column=4, padx=10, sticky='w')
+        self.checkbox_deprecated = ttk.Checkbutton(params_frame, text="Показывать устаревшие алгоритмы",
+                                                   variable=self.show_deprecated)
+        self.checkbox_deprecated.grid(row=0, column=4, padx=10, sticky='w')
 
         # Label for text input
-        ttk.Label(self.tab_cipher, text="Введите текст:", style='Input.TLabel').pack(anchor='w', padx=10)
+        self.label_input_text = ttk.Label(self.tab_cipher, text=self.i18n.strings['labels']['input_text'], style='Input.TLabel')
+        self.label_input_text.pack(anchor='w', padx=10)
 
         # Text input area with scrollbar
         self.entry_text = scrolledtext.ScrolledText(self.tab_cipher, font=('Consolas', 14), height=6)
         self.entry_text.pack(fill='x', padx=10, pady=5)
 
         # Label for results
-        ttk.Label(self.tab_cipher, text="Результаты:", style='Output.TLabel').pack(anchor='w', padx=10)
+        self.label_results = ttk.Label(self.tab_cipher, text=self.i18n.strings['labels']['results'], style='Output.TLabel')
+        self.label_results.pack(anchor='w', padx=10)
 
         # Results display area (readonly)
         self.output_area = scrolledtext.ScrolledText(self.tab_cipher, state='disabled')
         self.output_area.pack(expand=True, fill='both', padx=10, pady=10)
 
         # Label for warnings
-        ttk.Label(self.tab_cipher, text="Предупреждения:", style='Warning.TLabel').pack(anchor='w', padx=10)
+        self.label_warnings = ttk.Label(self.tab_cipher, text=self.i18n.strings['labels']['warnings'], style='Warning.TLabel')
+        self.label_warnings.pack(anchor='w', padx=10)
 
         # Warnings display area (readonly)
         self.warnings_area = scrolledtext.ScrolledText(self.tab_cipher, height=6, state='disabled', foreground=COLORS['warning'])
-        self.warnings_area.pack(fill='x', padx=10, pady=(0,10))
+        self.warnings_area.pack(fill='x', padx=10, pady=(0, 10))
 
         # Bind text change event to update results
         self.entry_text.bind('<KeyRelease>', self.on_text_change)
@@ -202,9 +340,10 @@ class CipherApp(tk.Tk):
 
         # Top frame for Base64 input
         top_frame = ttk.Frame(main_frame)
-        top_frame.pack(side='top', fill='both', expand=True, pady=(0,5))
+        top_frame.pack(side='top', fill='both', expand=True, pady=(0, 5))
 
-        ttk.Label(top_frame, text="Base64 код:", style='Input.TLabel').pack(anchor='w')
+        self.label_base64_input = ttk.Label(top_frame, text=self.i18n.strings['labels']['input_text'], style='Input.TLabel')
+        self.label_base64_input.pack(anchor='w')
         self.base64_encode_input = scrolledtext.ScrolledText(top_frame, font=('Consolas', 12), height=15)
         self.base64_encode_input.pack(expand=True, fill='both')
 
@@ -212,7 +351,8 @@ class CipherApp(tk.Tk):
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(side='top', fill='both', expand=True)
 
-        ttk.Label(bottom_frame, text="Декодированный текст:", style='Output.TLabel').pack(anchor='w')
+        self.label_base64_output = ttk.Label(bottom_frame, text=self.i18n.strings['labels']['results'], style='Output.TLabel')
+        self.label_base64_output.pack(anchor='w')
         self.base64_decode_output = scrolledtext.ScrolledText(bottom_frame, font=('Consolas', 12), height=15, state='disabled')
         self.base64_decode_output.pack(expand=True, fill='both')
 
@@ -231,9 +371,10 @@ class CipherApp(tk.Tk):
 
         # Top frame for input
         top_frame = ttk.Frame(main_frame)
-        top_frame.pack(side='top', fill='both', expand=True, pady=(0,5))
+        top_frame.pack(side='top', fill='both', expand=True, pady=(0, 5))
 
-        ttk.Label(top_frame, text="Введите текст для SHA3-256:", style='Input.TLabel').pack(anchor='w')
+        self.label_sha3_input = ttk.Label(top_frame, text=self.i18n.strings['labels']['input_text'], style='Input.TLabel')
+        self.label_sha3_input.pack(anchor='w')
         self.sha3_input = scrolledtext.ScrolledText(top_frame, font=('Consolas', 12), height=15)
         self.sha3_input.pack(expand=True, fill='both')
 
@@ -241,7 +382,8 @@ class CipherApp(tk.Tk):
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(side='top', fill='both', expand=True)
 
-        ttk.Label(bottom_frame, text="Хеш SHA3-256:", style='Output.TLabel').pack(anchor='w')
+        self.label_sha3_output = ttk.Label(bottom_frame, text=self.i18n.strings['labels']['results'], style='Output.TLabel')
+        self.label_sha3_output.pack(anchor='w')
         self.sha3_output = scrolledtext.ScrolledText(bottom_frame, font=('Consolas', 12), height=15, state='disabled')
         self.sha3_output.pack(expand=True, fill='both')
 
@@ -260,9 +402,10 @@ class CipherApp(tk.Tk):
 
         # Top frame for input
         top_frame = ttk.Frame(main_frame)
-        top_frame.pack(side='top', fill='both', expand=True, pady=(0,5))
+        top_frame.pack(side='top', fill='both', expand=True, pady=(0, 5))
 
-        ttk.Label(top_frame, text="Введите текст для BLAKE2b:", style='Input.TLabel').pack(anchor='w')
+        self.label_blake2b_input = ttk.Label(top_frame, text=self.i18n.strings['labels']['input_text'], style='Input.TLabel')
+        self.label_blake2b_input.pack(anchor='w')
         self.blake2b_input = scrolledtext.ScrolledText(top_frame, font=('Consolas', 12), height=15)
         self.blake2b_input.pack(expand=True, fill='both')
 
@@ -270,12 +413,66 @@ class CipherApp(tk.Tk):
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(side='top', fill='both', expand=True)
 
-        ttk.Label(bottom_frame, text="Хеш BLAKE2b:", style='Output.TLabel').pack(anchor='w')
+        self.label_blake2b_output = ttk.Label(bottom_frame, text=self.i18n.strings['labels']['results'], style='Output.TLabel')
+        self.label_blake2b_output.pack(anchor='w')
         self.blake2b_output = scrolledtext.ScrolledText(bottom_frame, font=('Consolas', 12), height=15, state='disabled')
         self.blake2b_output.pack(expand=True, fill='both')
 
         # Bind text change event to update hash
         self.blake2b_input.bind('<KeyRelease>', self.on_blake2b_input_change)
+
+    def create_password_generator_tab(self):
+        """Создаёт вкладку для генерации паролей"""
+        main_frame = ttk.Frame(self.tab_password)
+        main_frame.pack(expand=True, fill='both', padx=10, pady=10)
+
+        # Настройки пароля
+        settings_frame = ttk.Frame(main_frame)
+        settings_frame.pack(pady=10)
+
+        self.label_pwd_length = ttk.Label(settings_frame, text=self.i18n.strings['labels']['password_length'])
+        self.label_pwd_length.grid(row=0, column=0, sticky='w')
+        self.pwd_length = ttk.Spinbox(settings_frame, from_=4, to=64, width=5)
+        self.pwd_length.grid(row=0, column=1, padx=5)
+        self.pwd_length.set(12)
+
+        # Чекбоксы для выбора символов
+        self.use_letters = tk.BooleanVar(value=True)
+        self.use_digits = tk.BooleanVar(value=True)
+        self.use_symbols = tk.BooleanVar(value=False)
+
+        self.checkbox_letters = ttk.Checkbutton(settings_frame,
+                                                text=self.i18n.strings['labels']['charsets']['letters'],
+                                                variable=self.use_letters)
+        self.checkbox_letters.grid(row=1, column=0, sticky='w')
+        self.checkbox_digits = ttk.Checkbutton(settings_frame,
+                                               text=self.i18n.strings['labels']['charsets']['digits'],
+                                               variable=self.use_digits)
+        self.checkbox_digits.grid(row=1, column=1, sticky='w')
+        self.checkbox_symbols = ttk.Checkbutton(settings_frame,
+                                                text=self.i18n.strings['labels']['charsets']['symbols'],
+                                                variable=self.use_symbols)
+        self.checkbox_symbols.grid(row=1, column=2, sticky='w')
+
+        # Кнопки генерации
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.pack(pady=5)
+
+        self.btn_generate = ttk.Button(btn_frame,
+                                       text=self.i18n.strings['labels']['generate_password'],
+                                       command=self.generate_password)
+        self.btn_generate.pack(side='left', padx=5)
+        self.btn_copy = ttk.Button(btn_frame,
+                                   text=self.i18n.strings['labels']['copy_password'],
+                                   command=self.copy_password)
+        self.btn_copy.pack(side='left', padx=5)
+
+        # Поле вывода пароля
+        self.password_output = ttk.Entry(main_frame,
+                                        font=('Consolas', 14),
+                                        width=30,
+                                        justify='center')
+        self.password_output.pack(pady=10)
 
     def setup_tags(self):
         """
@@ -459,6 +656,36 @@ class CipherApp(tk.Tk):
         self.blake2b_output.delete('1.0', tk.END)
         self.blake2b_output.insert(tk.END, hash_value)
         self.blake2b_output.config(state='disabled')
+
+    # ===== Генератор паролей =====
+    def generate_password(self):
+        """Генерирует пароль на основе выбранных параметров"""
+        charset = ''
+        if self.use_letters.get():
+            charset += string.ascii_letters
+        if self.use_digits.get():
+            charset += string.digits
+        if self.use_symbols.get():
+            charset += string.punctuation
+
+        if not charset:
+            messagebox.showerror("Error", self.i18n.strings['labels']['error_select_charset'])
+            return
+
+        try:
+            length = int(self.pwd_length.get())
+            password = ''.join(random.choices(charset, k=length))
+            self.password_output.delete(0, tk.END)
+            self.password_output.insert(0, password)
+        except ValueError:
+            messagebox.showerror("Error", self.i18n.strings['labels']['error_invalid_length'])
+
+    def copy_password(self):
+        """Копирует пароль в буфер обмена"""
+        self.clipboard_clear()
+        self.clipboard_append(self.password_output.get())
+        messagebox.showinfo("Info", self.i18n.strings['labels']['copied'])
+
 
 if __name__ == "__main__":
     app = CipherApp()
