@@ -1,78 +1,78 @@
-# Base64+ кодировщик
+# Base64+ Encoder
 
-**Base64+ кодировщик** - это удобное и функциональное графическое приложение на Python с использованием Tkinter, предназначенное для кодирования, шифрования и хеширования текста. Программа поддерживает различные алгоритмы и предоставляет удобный интерфейс с вкладками для разных задач.
-
----
-
-## Основные возможности
-
-- **Кодирование и шифрование**
-    - Base64 (обычное и URL-safe)
-    - Шифр Цезаря с поддержкой русского и английского алфавитов (включая букву Ё)
-    - Шифр Атбаш
-    - XOR-шифр с пользовательским ключом
-    - Устаревшие алгоритмы MD5 и SHA1 (опционально)
-
-- **Base64 декодирование**  
-  Ввод Base64-кода и мгновенное декодирование с отображением результата.
-
-- **Хеширование**
-    - SHA3-256
-    - BLAKE2b
-
-  Для каждого алгоритма отдельная вкладка с полем ввода и автоматическим выводом хеша.
-
-- **Потокобезопасность и отзывчивость**  
-  Все вычисления выполняются в отдельных потоках, что обеспечивает плавную работу интерфейса без зависаний.
+**Base64+ Encoder** is a convenient and functional graphical application written in Python using Tkinter, designed for encoding, encrypting, and hashing text. The program supports various algorithms and provides a user-friendly tabbed interface for different tasks.
 
 ---
 
-## Интерфейс
+## Key Features
 
-Приложение организовано во вкладках:
+- **Encoding and Encryption**
+  - Base64 (standard and URL-safe)
+  - Caesar cipher supporting Russian and English alphabets (including the letter Ё)
+  - Atbash cipher
+  - XOR cipher with a user-defined key
+  - Deprecated algorithms MD5 and SHA1 (optional)
 
-1. **Шифры и кодирование** - ввод текста, параметры шифров и отображение результатов кодирования и шифрования.
-2. **Base64 декодирование** - два окна: ввод Base64 и декодированный текст.
-3. **SHA3-256 хеширование** - ввод текста и отображение хеша SHA3-256.
-4. **BLAKE2b хеширование** - ввод текста и отображение хеша BLAKE2b.
+- **Base64 Decoding**  
+  Enter Base64 code and instantly decode it with result display.
 
-Каждая вкладка снабжена понятными метками и удобными многострочными полями с прокруткой.
+- **Hashing**
+  - SHA3-256
+  - BLAKE2b
 
----
+  Each hashing algorithm has its own tab with an input field and automatic hash output.
 
-## Требования
-
-- Python 3.6 и выше
-- Модули из стандартной библиотеки: `tkinter`, `hashlib`, `base64`, `threading`
-
----
-
-## Запуск
-
-1. Скачайте или клонируйте репозиторий.
-2. Запустите скрипт: base64_gen.py
-
+- **Thread Safety and Responsiveness**  
+  All computations run in separate threads to ensure a smooth and responsive interface without freezes.
 
 ---
 
-## Пример использования
+## Interface
 
-- Введите текст на вкладке **Шифры и кодирование**, настройте параметры (ключ XOR, сдвиг Цезаря), результаты отобразятся автоматически.
-- На вкладке **Base64 декодирование** вставьте Base64-строку - декодированный текст появится сразу.
-- Вкладки **SHA3-256 хеширование** и **BLAKE2b хеширование** позволяют быстро получить хеш от любого текста.
+The application is organized into tabs:
+
+1. **Ciphers and Encoding** – text input, cipher parameters, and display of encoding and encryption results.
+2. **Base64 Decoding** – two windows: Base64 input and decoded text output.
+3. **SHA3-256 Hashing** – text input and SHA3-256 hash display.
+4. **BLAKE2b Hashing** – text input and BLAKE2b hash display.
+
+Each tab features clear labels and convenient multi-line scrollable text fields.
 
 ---
 
-## Лицензия
+## Requirements
+
+- Python 3.6 or higher
+- Standard library modules: `tkinter`, `hashlib`, `base64`, `threading`
+
+---
+
+## Running the Application
+
+1. Download or clone the repository.
+2. Run the script: base64_gen.py
+
+
+---
+
+## Usage Example
+
+- Enter text on the **Ciphers and Encoding** tab, adjust parameters (XOR key, Caesar shift), and results will update automatically.
+- On the **Base64 Decoding** tab, paste a Base64 string - the decoded text will appear instantly.
+- The **SHA3-256 Hashing** and **BLAKE2b Hashing** tabs allow quick generation of hashes from any input text.
+
+---
+
+## License
 
 MIT License
 
 ---
 
-## Контакты
+## Contact
 
-Если у вас есть вопросы или предложения, пожалуйста, создайте issue в репозитории.
+If you have any questions or suggestions, please open an issue in the repository.
 
 ---
 
-**Base64+ кодировщик** - простой и мощный инструмент для работы с текстом и кодировками, идеально подходящий для обучения, тестирования и повседневного использования.
+**Base64+ Encoder** is a simple yet powerful tool for working with text and encodings, ideal for learning, testing, and everyday use.
