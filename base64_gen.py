@@ -15,33 +15,33 @@ COLORS = {
     'warning': '#FF4500'       # Orange-red for warnings
 }
 
-# ================== МНОГОЯЗЫЧНАЯ ПОДДЕРЖКА ==================
+# ================== MULTILANGUAGE SUPPORT ==================
 LANGUAGES = {
     'ru': {
-        'app_title': 'Base64+ кодировщик',
-        'tabs': ['Шифры и кодирование', 'Base64 декодирование', 'SHA3-256 хеширование',
-                 'BLAKE2b хеширование', 'Генератор паролей'],
+        'app_title': 'Base64+ Encoder',
+        'tabs': ['Ciphers & Encoding', 'Base64 Decoding', 'SHA3-256 Hashing',
+                 'BLAKE2b Hashing', 'Password Generator'],
         'labels': {
-            'input_text': 'Введите текст:',
-            'results': 'Результаты:',
-            'warnings': 'Предупреждения:',
-            'password_length': 'Длина пароля:',
-            'generate_password': 'Сгенерировать',
-            'copy_password': 'Копировать',
+            'input_text': 'Enter text:',
+            'results': 'Results:',
+            'warnings': 'Warnings:',
+            'password_length': 'Password length:',
+            'generate_password': 'Generate',
+            'copy_password': 'Copy',
             'charsets': {
-                'letters': 'Буквы',
-                'digits': 'Цифры',
-                'symbols': 'Символы'
+                'letters': 'Letters',
+                'digits': 'Digits',
+                'symbols': 'Symbols'
             },
-            'language_menu': '🌐 Язык',
-            'language_ru': 'Русский',
-            'language_en': 'Английский',
-            'error_select_charset': 'Выберите хотя бы один набор символов!',
-            'error_invalid_length': 'Неверная длина пароля!',
-            'copied': 'Пароль скопирован в буфер обмена!',
-            'xor_key': 'Ключ XOR:',
-            'caesar_shift': 'Сдвиг Цезаря:',
-            'show_deprecated': 'Показывать устаревшие алгоритмы'
+            'language_menu': '🌐 Language',
+            'language_ru': 'Russian',
+            'language_en': 'English',
+            'error_select_charset': 'Select at least one character set!',
+            'error_invalid_length': 'Invalid password length!',
+            'copied': 'Password copied to clipboard!',
+            'xor_key': 'XOR Key:',
+            'caesar_shift': 'Caesar Shift:',
+            'show_deprecated': 'Show deprecated algorithms'
         }
     },
     'en': {
@@ -148,7 +148,7 @@ def encode_blake2b(s):
     return hashlib.blake2b(s.encode('utf-8')).hexdigest()
 
 class I18N:
-    """Класс для управления локализацией"""
+    """Class for localization management"""
     def __init__(self, language='ru'):
         self.language = language
         self.strings = LANGUAGES.get(language, LANGUAGES['ru'])
@@ -167,7 +167,7 @@ class CipherApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        # Инициализация локализации
+        # Initialize localization
         self.i18n = I18N()
 
         # Set the window title
@@ -187,7 +187,7 @@ class CipherApp(tk.Tk):
         self.setup_tags()
 
     def create_language_menu(self):
-        """Создаёт меню выбора языка"""
+        """Creates the language selection menu"""
         menubar = tk.Menu(self)
         lang_menu = tk.Menu(menubar, tearoff=0)
         lang_menu.add_command(label=self.i18n.strings['labels']['language_ru'], command=lambda: self.change_language('ru'))
@@ -196,24 +196,24 @@ class CipherApp(tk.Tk):
         self.config(menu=menubar)
 
     def change_language(self, lang):
-        """Меняет язык интерфейса"""
+        """Changes the interface language"""
         self.i18n.set_language(lang)
         self.title(self.i18n.strings['app_title'])
 
-        # Обновляем названия вкладок
+        # Update tab titles
         for i, title in enumerate(self.i18n.strings['tabs']):
             self.notebook.tab(i, text=title)
 
-        # Обновляем меню языка (чтобы перевести пункты)
+        # Update language menu (to translate items)
         self.create_language_menu()
 
-        # Обновляем остальные элементы интерфейса
+        # Update other interface elements
         self.update_all_labels()
 
     def update_all_labels(self):
-        """Обновляет все текстовые метки в интерфейсе"""
+        """Updates all text labels in the interface"""
 
-        # Вкладка шифров и кодирования
+        # Ciphers and Encoding tab
         self.label_input_text.config(text=self.i18n.strings['labels']['input_text'])
         self.label_results.config(text=self.i18n.strings['labels']['results'])
         self.label_warnings.config(text=self.i18n.strings['labels']['warnings'])
@@ -222,19 +222,19 @@ class CipherApp(tk.Tk):
         self.label_caesar_shift.config(text=self.i18n.strings['labels']['caesar_shift'])
         self.checkbox_deprecated.config(text=self.i18n.strings['labels']['show_deprecated'])
 
-        # Вкладка Base64
+        # Base64 tab
         self.label_base64_input.config(text=self.i18n.strings['labels']['input_text'])
         self.label_base64_output.config(text=self.i18n.strings['labels']['results'])
 
-        # Вкладка SHA3-256
+        # SHA3-256 tab
         self.label_sha3_input.config(text=self.i18n.strings['labels']['input_text'])
         self.label_sha3_output.config(text=self.i18n.strings['labels']['results'])
 
-        # Вкладка BLAKE2b
+        # BLAKE2b tab
         self.label_blake2b_input.config(text=self.i18n.strings['labels']['input_text'])
         self.label_blake2b_output.config(text=self.i18n.strings['labels']['results'])
 
-        # Вкладка генератора паролей
+        # Password generator tab
         self.label_pwd_length.config(text=self.i18n.strings['labels']['password_length'])
         self.checkbox_letters.config(text=self.i18n.strings['labels']['charsets']['letters'])
         self.checkbox_digits.config(text=self.i18n.strings['labels']['charsets']['digits'])
@@ -426,11 +426,11 @@ class CipherApp(tk.Tk):
         self.blake2b_input.bind('<KeyRelease>', self.on_blake2b_input_change)
 
     def create_password_generator_tab(self):
-        """Создаёт вкладку для генерации паролей"""
+        """Creates the password generator tab"""
         main_frame = ttk.Frame(self.tab_password)
         main_frame.pack(expand=True, fill='both', padx=10, pady=10)
 
-        # Настройки пароля
+        # Password settings
         settings_frame = ttk.Frame(main_frame)
         settings_frame.pack(pady=10)
 
@@ -440,7 +440,7 @@ class CipherApp(tk.Tk):
         self.pwd_length.grid(row=0, column=1, padx=5)
         self.pwd_length.set(12)
 
-        # Чекбоксы для выбора символов
+        # Checkboxes for character selection
         self.use_letters = tk.BooleanVar(value=True)
         self.use_digits = tk.BooleanVar(value=True)
         self.use_symbols = tk.BooleanVar(value=False)
@@ -458,7 +458,7 @@ class CipherApp(tk.Tk):
                                                 variable=self.use_symbols)
         self.checkbox_symbols.grid(row=1, column=2, sticky='w')
 
-        # Кнопки генерации
+        # Buttons for generating and copying
         btn_frame = ttk.Frame(main_frame)
         btn_frame.pack(pady=5)
 
@@ -471,7 +471,7 @@ class CipherApp(tk.Tk):
                                    command=self.copy_password)
         self.btn_copy.pack(side='left', padx=5)
 
-        # Поле вывода пароля
+        # Password output field
         self.password_output = ttk.Entry(main_frame,
                                         font=('Consolas', 14),
                                         width=30,
@@ -661,9 +661,9 @@ class CipherApp(tk.Tk):
         self.blake2b_output.insert(tk.END, hash_value)
         self.blake2b_output.config(state='disabled')
 
-    # ===== Генератор паролей =====
+    # ===== Password Generator =====
     def generate_password(self):
-        """Генерирует пароль на основе выбранных параметров"""
+        """Generates a password based on selected parameters"""
         charset = ''
         if self.use_letters.get():
             charset += string.ascii_letters
@@ -685,7 +685,7 @@ class CipherApp(tk.Tk):
             messagebox.showerror("Error", self.i18n.strings['labels']['error_invalid_length'])
 
     def copy_password(self):
-        """Копирует пароль в буфер обмена"""
+        """Copies the password to the clipboard"""
         self.clipboard_clear()
         self.clipboard_append(self.password_output.get())
         messagebox.showinfo("Info", self.i18n.strings['labels']['copied'])
