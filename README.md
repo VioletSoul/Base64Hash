@@ -1,5 +1,13 @@
 # Base64+ Encoder
 
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![Tkinter](https://img.shields.io/badge/Tkinter-3776AB?style=flat&logo=python&logoColor=white)
+![Base64](https://img.shields.io/badge/Base64-✓-yellow)
+![Cipher](https://img.shields.io/badge/Cipher-✓-blue)
+![Hashing](https://img.shields.io/badge/Hashing-✓-purple)
+![Thread Safety](https://img.shields.io/badge/Thread%20Safe-✓-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-blue)
+
 **Base64+ Encoder** is a convenient and functional graphical application written in Python using Tkinter, designed for encoding, encrypting, and hashing text. The program supports various algorithms and provides a user-friendly tabbed interface for different tasks.
 
 ---
