@@ -7,8 +7,7 @@
 ![Hashing](https://img.shields.io/badge/Hashing-✓-purple)
 ![Thread Safety](https://img.shields.io/badge/Thread%20Safe-✓-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-blue)
-[![Stars](https://img.shields.io/github/stars/VioletSoul/Base64Hash.svg?style=social)](https://github.com/VioletSoul/Base64Hash)
-[![Last Commit](https://img.shields.io/github/last-commit/VioletSoul/Base64Hash.svg)](https://github.com/VioletSoul/Base64Hash/commits/main)
+
 
 **Base64+ Encoder** is a convenient and functional graphical application written in Python using Tkinter, designed for encoding, encrypting, and hashing text. The program supports various algorithms and provides a user-friendly tabbed interface for different tasks.
 
