@@ -7,6 +7,8 @@
 ![Hashing](https://img.shields.io/badge/Hashing-✓-purple)
 ![Thread Safety](https://img.shields.io/badge/Thread%20Safe-✓-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-blue)
+![Repo Size](https://img.shields.io/github/repo-size/VioletSoul/Base64Hash)
+![Code Size](https://img.shields.io/github/languages/code-size/VioletSoul/Base64Hash)
 [![Stars](https://img.shields.io/github/stars/VioletSoul/Base64Hash.svg?style=social)](https://github.com/VioletSoul/Base64Hash)
 [![Last Commit](https://img.shields.io/github/last-commit/VioletSoul/Base64Hash.svg)](https://github.com/VioletSoul/Base64Hash/commits/main)
 
